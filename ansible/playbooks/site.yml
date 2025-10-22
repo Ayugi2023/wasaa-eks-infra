@@ -1,0 +1,10 @@
+---
+- name: Deploy EKS Infrastructure
+  hosts: eks_cluster
+  gather_facts: false
+  roles:
+    - common
+    - eks-setup
+    - argocd
+    - monitoring
+    - security

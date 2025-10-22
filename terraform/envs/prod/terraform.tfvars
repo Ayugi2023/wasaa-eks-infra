@@ -1,0 +1,6 @@
+aws_region      = "af-south-1"
+environment     = "production"
+project_name    = "wasaachat"
+cluster_name    = "wasaa-prod-eks"
+cluster_version = "1.28"
+vpc_cidr        = "10.0.0.0/16"

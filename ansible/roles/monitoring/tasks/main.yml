@@ -1,0 +1,49 @@
+---
+- name: Create monitoring namespace
+  kubernetes.core.k8s:
+    name: "{{ monitoring_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install Prometheus
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    release_namespace: "{{ monitoring_namespace }}"
+    values:
+      grafana:
+        enabled: true
+        adminPassword: admin123
+        service:
+          type: LoadBalancer
+      prometheus:
+        prometheusSpec:
+          retention: 30d
+          storageSpec:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: gp3
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: 50Gi
+
+- name: Install Grafana dashboards
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: custom-dashboard
+        namespace: "{{ monitoring_namespace }}"
+        labels:
+          grafana_dashboard: "1"
+      data:
+        dashboard.json: |
+          {
+            "dashboard": {
+              "title": "EKS Cluster Overview",
+              "panels": []
+            }
+          }

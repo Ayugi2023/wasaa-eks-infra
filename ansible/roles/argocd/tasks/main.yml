@@ -1,0 +1,40 @@
+---
+- name: Create ArgoCD namespace
+  kubernetes.core.k8s:
+    name: "{{ argocd_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install ArgoCD
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argo/argo-cd
+    release_namespace: "{{ argocd_namespace }}"
+    values:
+      server:
+        service:
+          type: LoadBalancer
+        extraArgs:
+          - --insecure
+      configs:
+        repositories:
+          - url: https://github.com/argoproj/argocd-example-apps.git
+            type: git
+          - url: https://helm.releases.hashicorp.com
+            type: helm
+            name: hashicorp
+          - url: https://kubernetes-sigs.github.io/aws-load-balancer-controller
+            type: helm
+            name: aws-load-balancer-controller
+
+- name: Wait for ArgoCD server to be ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: argocd-server
+    namespace: "{{ argocd_namespace }}"
+    wait_condition:
+      type: Available
+      status: "True"
+    wait_timeout: 300

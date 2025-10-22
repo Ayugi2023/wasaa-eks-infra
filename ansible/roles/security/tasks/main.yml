@@ -1,0 +1,45 @@
+---
+- name: Create security policies namespace
+  kubernetes.core.k8s:
+    name: security-system
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Apply Pod Security Standards
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ app_namespace }}"
+        labels:
+          pod-security.kubernetes.io/enforce: restricted
+          pod-security.kubernetes.io/audit: restricted
+          pod-security.kubernetes.io/warn: restricted
+
+- name: Create Network Policy
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-deny-all
+        namespace: "{{ app_namespace }}"
+      spec:
+        podSelector: {}
+        policyTypes:
+        - Ingress
+        - Egress
+
+- name: Create RBAC ClusterRole
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: pod-reader
+      rules:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["get", "watch", "list"]
