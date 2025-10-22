@@ -19,7 +19,7 @@
           - --insecure
       configs:
         repositories:
-          - url: https://github.com/argoproj/argocd-example-apps.git
+          - url: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
             type: git
           - url: https://helm.releases.hashicorp.com
             type: helm
