@@ -14,9 +14,17 @@
     values:
       server:
         service:
-          type: LoadBalancer
+          type: ClusterIP
         extraArgs:
           - --insecure
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          hosts:
+            - argocd.wasaachat.com
+          annotations:
+            nginx.ingress.kubernetes.io/backend-protocol: HTTP
+            nginx.ingress.kubernetes.io/rewrite-target: /
       configs:
         repositories:
           - url: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
@@ -38,3 +46,28 @@
       type: Available
       status: "True"
     wait_timeout: 300
+
+- name: Create ArgoCD ingress
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: argocd-ingress
+        namespace: "{{ argocd_namespace }}"
+        annotations:
+          kubernetes.io/ingress.class: nginx
+          nginx.ingress.kubernetes.io/backend-protocol: HTTP
+          nginx.ingress.kubernetes.io/rewrite-target: /
+      spec:
+        rules:
+        - host: argocd.wasaachat.com
+          http:
+            paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: argocd-server
+                  port:
+                    number: 80
