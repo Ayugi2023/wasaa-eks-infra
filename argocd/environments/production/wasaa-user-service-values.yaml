@@ -1,4 +1,4 @@
-replicaCount: 3
+replicaCount: 2
 
 # Override helm charts ECR registry with correct account ID
 

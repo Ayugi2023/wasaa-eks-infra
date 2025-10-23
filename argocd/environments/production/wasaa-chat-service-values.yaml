@@ -1,4 +1,4 @@
-replicaCount: 0  # Temporarily disabled - ECR repository does not exist
+replicaCount: 2  # Temporarily disabled - ECR repository does not exist
 
 
 hpa:
