@@ -1,0 +1,18 @@
+## cert-manager values for developer
+installCRDs: true
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 512Mi
+
+# Optional default ingress shim settings (works once issuers are set)
+ingressShim:
+  defaultIssuerName: "letsencrypt-staging"
+  defaultIssuerKind: "ClusterIssuer"
+

@@ -1,0 +1,38 @@
+# App-of-Apps for WASAA Microservices
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-microservices-{{ .Values.env }}
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"  # Deploy after monitoring
+spec:
+  project: wasaa-microservices
+  source:
+    repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+    targetRevision: main
+    path: argocd/applications/wasaa-microservices
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.argocdNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 5
+  info:
+    - name: 'Description'
+      value: 'WASAA microservices: all business applications'
+    - name: 'Deploy Order'
+      value: 'All microservices deployed in parallel'

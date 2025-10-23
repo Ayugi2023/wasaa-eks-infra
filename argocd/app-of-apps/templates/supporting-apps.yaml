@@ -1,0 +1,32 @@
+{{- if .Values.groupSupportingApps }}
+# App-of-Apps for WASAA Supporting Infrastructure
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-supportingapps-{{ .Values.env }}
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Deploy first
+spec:
+  project: wasaa-supporting
+  source:
+    repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+    targetRevision: main
+    path: argocd/applications/supporting
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.argocdNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+{{- end }}

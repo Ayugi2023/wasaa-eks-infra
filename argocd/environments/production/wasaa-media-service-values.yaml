@@ -1,0 +1,30 @@
+replicaCount: 2
+
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 50
+  targetCPUUtilizationPercentage: 65
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 600m
+    memory: 1Gi
+
+
+# Ensure serviceAccount is not creating new ones
+serviceAccount:
+  create: false
+  name: default
+volumes:
+  - name: rds-ca
+    secret:
+      secretName: rds-ca
+volumeMounts:
+  - name: rds-ca
+    mountPath: /etc/ssl/certs
+    readOnly: true

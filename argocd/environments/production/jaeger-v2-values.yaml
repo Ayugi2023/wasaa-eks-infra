@@ -1,0 +1,59 @@
+# Jaeger V2 values for WASAA Developer Environment
+# Nginx ingress configuration for dev domain
+
+# Jaeger All-in-One configuration for development
+jaeger:
+  # Storage configuration
+  persistence:
+    enabled: true
+    storageClassName: "gp3-fast"
+    size: 5Gi
+
+  # Resource limits for development
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+  # Query service configuration
+  query:
+    # Ingress configuration for Jaeger Query UI
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/rewrite-target: /
+        alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:561810056018:certificate/79970870-42b8-4600-8ea3-e85a0f0bcab5"
+        alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-2016-08"
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      hosts:
+        - host: dev-jaeger.wasaachat.com
+          paths:
+            - path: /
+              pathType: Prefix
+      # TLS terminated at the ALB using the ACM certificate above; no cert-manager Certificate is used.
+
+  # Collector configuration for development
+  collector:
+    resources:
+      limits:
+        cpu: 300m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# Agent configuration
+agent:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

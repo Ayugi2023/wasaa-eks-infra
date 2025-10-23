@@ -1,0 +1,145 @@
+# ArgoCD Project for WASAA Observability
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: wasaa-observability
+  namespace: argocd
+  labels:
+    project-type: observability
+spec:
+  description: "WASAA Platform Observability Stack (Loki, Grafana, Prometheus, Pyroscope, Alertmanager, Jaeger)"
+  
+  # Source repositories
+  sourceRepos:
+    - 'https://github.com/web-masters-ke/wasaa-infra'
+    - 'https://github.com/web-masters-ke/wasaa-chat-helm-charts'
+    - 'https://grafana.github.io/helm-charts'  # Loki, Grafana, Pyroscope
+    - 'https://prometheus-community.github.io/helm-charts'  # Prometheus, Alertmanager
+    - 'https://jaegertracing.github.io/helm-charts'  # Jaeger
+    - 'https://open-telemetry.github.io/opentelemetry-helm-charts'  # OpenTelemetry
+  
+  # Destination clusters and namespaces
+  destinations:
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+    - namespace: 'wasaa-monitoring'
+      server: https://kubernetes.default.svc
+    - namespace: 'wasaa-tracing'
+      server: https://kubernetes.default.svc
+    - namespace: 'wasaa-logging'
+      server: https://kubernetes.default.svc
+    - namespace: 'argocd'
+      server: https://kubernetes.default.svc
+    - namespace: 'kube-system'
+      server: https://kubernetes.default.svc
+    - namespace: 'default'
+      server: https://kubernetes.default.svc
+  
+  # Cluster resource allow list
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+    - group: monitoring.coreos.com
+      kind: Prometheus
+    - group: monitoring.coreos.com
+      kind: Alertmanager
+    - group: monitoring.coreos.com
+      kind: PodMonitor
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: jaegertracing.io
+      kind: Jaeger
+    - group: opentelemetry.io
+      kind: OpenTelemetryCollector
+    - group: opentelemetry.io
+      kind: Instrumentation
+  
+  # Namespace resource allow list
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: ''
+      kind: Endpoints
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: ''
+      kind: Pod
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: apps
+      kind: DaemonSet
+    - group: apps
+      kind: ReplicaSet
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: batch
+      kind: Job
+    - group: batch
+      kind: CronJob
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: policy
+      kind: PodSecurityPolicy
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: argoproj.io
+      kind: Application
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: monitoring.coreos.com
+      kind: PodMonitor
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+  
+  # Roles for this project
+  roles:
+    - name: observability-admin
+      description: Full access to observability components
+      policies:
+        - p, proj:wasaa-observability:observability-admin, applications, *, wasaa-observability/*, allow
+        - p, proj:wasaa-observability:observability-admin, repositories, *, *, allow
+      groups:
+        - wasaa:sre-team
+        - wasaa:devops-team
+    
+    - name: observability-operator
+      description: Operational access to observability components
+      policies:
+        - p, proj:wasaa-observability:observability-operator, applications, get, wasaa-observability/*, allow
+        - p, proj:wasaa-observability:observability-operator, applications, sync, wasaa-observability/*, allow
+        - p, proj:wasaa-observability:observability-operator, applications, delete, wasaa-observability/*, deny
+      groups:
+        - wasaa:ops-team
+    
+    - name: observability-readonly
+      description: Read-only access to observability components
+      policies:
+        - p, proj:wasaa-observability:observability-readonly, applications, get, wasaa-observability/*, allow
+        - p, proj:wasaa-observability:observability-readonly, applications, sync, wasaa-observability/*, deny
+      groups:
+        - wasaa:developers
+        - wasaa:qa-team

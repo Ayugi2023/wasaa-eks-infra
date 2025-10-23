@@ -1,0 +1,129 @@
+# Loki values for WASAA Developer Environment  
+# Storage class and resource optimization configuration
+
+# Use local filesystem storage for development
+loki:
+  # Explicit storageClassName for all PVC templates to ensure EBS gp3-fast binding
+  storageClassName: gp3-fast
+  storageClass: gp3-fast
+  # Use filesystem storage for simplicity in development
+  storage:
+    type: filesystem
+
+# Global storage class configuration  
+global:
+  storageClass: "gp3-fast"
+
+# Storage configuration for StatefulSet components
+persistence:
+  enabled: true
+  storageClass: "gp3-fast"
+
+# Loki component configurations with correct storage classes and resource limits
+write:
+  replicas: 1  # Reduced for development
+  persistence:
+    enabled: true
+    storageClass: "gp3-fast"
+    storageClassName: "gp3-fast" 
+    size: 10Gi
+  # Volume claim template for StatefulSet
+  volumeClaimTemplate:
+    spec:
+      storageClassName: "gp3-fast"
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+read:
+  replicas: 1  # Reduced for development
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+backend:
+  replicas: 1  # Reduced for development  
+  persistence:
+    enabled: true
+    storageClass: "gp3-fast"
+    storageClassName: "gp3-fast"
+    size: 10Gi
+  # Volume claim template for StatefulSet
+  volumeClaimTemplate:
+    spec:
+      storageClassName: "gp3-fast"
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+gateway:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  # Ingress configuration for Loki Gateway
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/auth-type: basic
+      nginx.ingress.kubernetes.io/auth-secret: loki-basic-auth
+      nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Loki'
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:561810056018:certificate/79970870-42b8-4600-8ea3-e85a0f0bcab5"
+      alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-2016-08"
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    hosts:
+      - host: dev-loki.wasaachat.com
+        paths:
+          - path: /
+            pathType: Prefix
+    # TLS terminated at the ALB using the ACM certificate above; no cert-manager Certificate is used.
+
+# MinIO for local storage
+minio:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "gp3-fast"
+    storageClassName: "gp3-fast"
+    size: 10Gi  # Reduced for development
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+# Cache configurations
+chunksCache:
+  enabled: false  # Disabled for development to reduce resource usage
+
+resultsCache:
+  enabled: false  # Disabled for development to reduce resource usage

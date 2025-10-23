@@ -1,0 +1,59 @@
+# Pyroscope values for WASAA Developer Environment
+# Nginx ingress configuration for dev domain
+
+# Pyroscope configuration
+pyroscope:
+  # Persistence configuration
+  persistence:
+    enabled: true
+    storageClassName: "gp3-fast"
+    size: 5Gi
+
+  # Resource limits for development
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+  # Replicas for development
+  replicas: 1
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 4040
+
+  # Ingress configuration for Pyroscope
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:561810056018:certificate/79970870-42b8-4600-8ea3-e85a0f0bcab5"
+      alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-2016-08"
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    hosts:
+      - host: dev-pyroscope.wasaachat.com
+        paths:
+          - path: /
+            pathType: Prefix
+    # TLS terminated at the ALB using the ACM certificate above; no cert-manager Certificate is used.
+
+# Pyroscope configuration
+config:
+  # Storage configuration
+  storage:
+    path: /var/lib/pyroscope
+  
+  # Server configuration
+  server:
+    http-listen-port: 4040
+    
+  # Log configuration
+  log:
+    level: info

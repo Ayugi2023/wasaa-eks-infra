@@ -1,0 +1,23 @@
+replicaCount: 2
+
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 50
+  targetCPUUtilizationPercentage: 65
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 400m
+    memory: 512Mi
+
+
+
+# Ensure serviceAccount is not creating new ones
+serviceAccount:
+  create: false
+  name: default

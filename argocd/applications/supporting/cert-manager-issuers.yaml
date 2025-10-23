@@ -1,0 +1,4 @@
+# DISABLED: cert-manager issuers Application disabled in repository
+# Reason: issuer resources are no longer applied; TLS is terminated at ALB+ACM.
+# Issuer resources were removed from environment directories to avoid accidental
+# provisioning. Restore this file to re-enable issuing via cert-manager.

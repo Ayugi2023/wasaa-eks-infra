@@ -1,0 +1,98 @@
+# Developer environment configuration
+env: developer
+argocdProject: wasaa-applications
+argocdNamespace: argocd
+serviceAccount:
+  name: ecr-image-puller
+
+namespaces:
+  nginxIngress: ingress-nginx
+  wasaaAdminService: wasaa-admin-service
+  wasaaAdsmanagerService: wasaa-adsmanager-service
+  wasaaAffiliateService: wasaa-affiliate-service
+  wasaaAppsService: wasaa-apps-service
+  wasaaAuditService: wasaa-audit-service
+  wasaaCallsService: wasaa-calls-service
+  wasaaChamaService: wasaa-chama-service
+  wasaaChatService: wasaa-chat-service
+  wasaaContactService: wasaa-contact-service
+  wasaaDeveloperService: wasaa-developer-service
+  wasaaEscrowService: wasaa-escrow-service
+  wasaaFundraiserService: wasaa-fundraiser-service
+  wasaaGatewayService: wasaa-gateway-service
+  wasaaGiftService: wasaa-gift-service
+  wasaaGroupsService: wasaa-groups-service
+  wasaaKafkaService: wasaa-kafka-service
+  wasaaLivestreamService: wasaa-livestream-service
+  wasaaMediaService: wasaa-media-service
+  wasaaMessageService: wasaa-message-service
+  wasaaModerationService: wasaa-moderation-service
+  wasaaNotificationService: wasaa-notification-service
+  wasaaShortsService: wasaa-shorts-service
+  wasaaStatusService: wasaa-status-service
+  wasaaStorefrontService: wasaa-storefront-service
+  wasaaSupportService: wasaa-support-service
+  wasaaUserService: wasaa-user-service
+  wasaaWalletService: wasaa-wallet-service
+  wasaaWebService: wasaa-web-service
+
+# Explicitly disable nginx-ingress management in Argo CD for developer
+enableNginxIngress: false
+
+# Group all supporting infrastructure apps under one ArgoCD application
+groupSupportingApps: true
+
+# Database deployment controls for developer environment
+enableDatabases:
+  postgres: false  # Using AWS Aurora PostgreSQL
+  mongodb: false   # Using AWS DocumentDB
+  redis: false     # Renamed to microservicesRedis
+  microservicesRedis: true  # For microservices using ElastiCache
+
+# ArgoCD Redis deployment control
+enableArgocdRedis: true
+
+# Monitoring deployment control
+enableMonitoring: true
+
+# New components configuration
+argocd:
+  ingress:
+    enabled: true
+    host: argocd.wasaa-developer.internal
+    # clusterIssuer removed: TLS handled by ALB+ACM
+  config:
+    url: https://argocd.wasaa-developer.internal
+  oidc:
+    enabled: false
+
+portainer:
+  persistence:
+    storageClass: gp3
+    size: 10Gi
+  service:
+    type: LoadBalancer
+  tls:
+    force: true
+  ingress:
+    enabled: false
+
+toolNamespaces:
+  # certManager removed: we use ALB+ACM for TLS termination; cert-manager is not installed by default.
+  externalDns: external-dns
+  portainer: portainer
+
+# Microservices configuration
+enableMicroservices: true
+
+# Monitoring configuration
+monitoring:
+  namespace: monitoring
+  storageClass: gp3
+  persistence:
+    prometheus:
+      size: 10Gi
+    grafana:
+      size: 5Gi
+    loki:
+      size: 10Gi

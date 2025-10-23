@@ -1,0 +1,28 @@
+# wasaa-shorts-service-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-shorts-service-developer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: wasaa-microservices
+  sources:
+    - repoURL: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
+      targetRevision: main
+      path: wasaa-shorts-service
+      helm:
+        releaseName: wasaa-shorts-service
+        values: |-
+          replicaCount: 1
+          replicas: 1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wasaa-shorts-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,66 @@
+# Default values for WasaaChat App of Apps
+# This file contains common configuration that applies to all environments.
+# For environment-specific configurations, use:
+#   - values-developer.yaml for development environment
+#   - values-staging.yaml for staging environment  
+#   - values-production.yaml for production environment
+#
+# Usage:
+#   helm install wasaa-app-of-apps . -f values-<environment>.yaml
+#
+# Default configuration (can be overridden by environment-specific files)
+
+# Common ArgoCD configuration
+argocdProject: default
+argocdNamespace: argocd
+
+# Default environment (should be overridden)
+env: developer
+
+# Common namespace configuration (can be overridden per environment)
+namespaces:
+  nginxIngress: ingress-nginx
+  wasaaAdminService: wasaa-admin-service
+  wasaaAuditService: wasaa-audit-service
+  wasaaContactService: wasaa-contact-service
+  wasaaGatewayService: wasaa-gateway-service
+  wasaaGiftService: wasaa-gift-service
+  wasaaKafkaService: wasaa-kafka-service
+  wasaaMediaService: wasaa-media-service
+  wasaaNotificationService: wasaa-notification-service
+  wasaaStatusService: wasaa-status-service
+  wasaaSupportService: wasaa-support-service
+  wasaaUserService: wasaa-user-service
+  wasaaWalletService: wasaa-wallet-service
+  wasaaWebService: wasaa-web-service
+  kafka: kafka
+  redis: redis
+  postgres: postgres
+  mongodb: mongodb
+
+# Control whether this chart deploys ingress-nginx as an Application
+enableNginxIngress: false
+
+# Database deployment controls
+enableDatabases:
+  postgres: false  # Using AWS Aurora PostgreSQL
+  mongodb: false   # Using AWS DocumentDB
+  redis: false     # Renamed to microservicesRedis
+  microservicesRedis: true  # For microservices using ElastiCache
+
+# ArgoCD Redis deployment control
+enableArgocdRedis: true
+
+# Optional tool namespaces
+toolNamespaces:
+  # certManager removed: ALB+ACM used for TLS termination; cert-manager not installed by default
+  externalDns: external-dns
+
+portainer:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: microk8s-hostpath
+    size: 5Gi
+  service:
+    type: ClusterIP

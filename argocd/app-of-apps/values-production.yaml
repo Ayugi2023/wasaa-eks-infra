@@ -1,0 +1,84 @@
+# Production environment configuration
+env: production
+argocdProject: wasaa-applications
+argocdNamespace: argocd
+
+namespaces:
+  nginxIngress: ingress-nginx
+  wasaaAdminService: wasaa-admin-service-prod
+  wasaaAdsmanagerService: wasaa-adsmanager-service-prod
+  wasaaAffiliateService: wasaa-affiliate-service-prod
+  wasaaAppsService: wasaa-apps-service-prod
+  wasaaAuditService: wasaa-audit-service-prod
+  wasaaCallsService: wasaa-calls-service-prod
+  wasaaChamaService: wasaa-chama-service-prod
+  wasaaChatService: wasaa-chat-service-prod
+  wasaaContactService: wasaa-contact-service-prod
+  wasaaDeveloperService: wasaa-developer-service-prod
+  wasaaEscrowService: wasaa-escrow-service-prod
+  wasaaFundraiserService: wasaa-fundraiser-service-prod
+  wasaaGatewayService: wasaa-gateway-service-prod
+  wasaaGiftService: wasaa-gift-service-prod
+  wasaaGroupsService: wasaa-groups-service-prod
+  wasaaKafkaService: wasaa-kafka-service-prod
+  wasaaLivestreamService: wasaa-livestream-service-prod
+  wasaaMediaService: wasaa-media-service-prod
+  wasaaMessageService: wasaa-message-service-prod
+  wasaaModerationService: wasaa-moderation-service-prod
+  wasaaNotificationService: wasaa-notification-service-prod
+  wasaaShortsService: wasaa-shorts-service-prod
+  wasaaStatusService: wasaa-status-service-prod
+  wasaaStorefrontService: wasaa-storefront-service-prod
+  wasaaSupportService: wasaa-support-service-prod
+  wasaaUserService: wasaa-user-service-prod
+  wasaaWalletService: wasaa-wallet-service-prod
+  wasaaWebService: wasaa-web-service-prod
+
+# Database deployment controls for production environment
+enableDatabases:
+  postgres: false  # Using AWS Aurora PostgreSQL
+  mongodb: false   # Using AWS DocumentDB
+  redis: false     # Renamed to microservicesRedis
+  microservicesRedis: true  # For microservices using ElastiCache
+
+# ArgoCD Redis deployment control
+enableArgocdRedis: true
+
+# Control whether this chart deploys ingress-nginx as an Application
+enableNginxIngress: false  # Disabled - managed separately in production
+
+# New components configuration
+argocd:
+  ingress:
+    enabled: true
+    host: argocd.wasaa.com
+    # clusterIssuer removed: TLS handled by ALB+ACM
+  config:
+    url: https://argocd.wasaa.com
+  oidc:
+    enabled: true
+    name: Azure
+    issuer: https://login.microsoftonline.com/<TENANT_ID>/v2.0
+    clientId: <CLIENT_ID>
+
+portainer:
+  persistence:
+    storageClass: gp3
+    size: 50Gi
+  service:
+    type: LoadBalancer
+  tls:
+    force: true
+  ingress:
+    enabled: true
+    host: portainer.wasaa.com
+    clusterIssuer: letsencrypt-production
+
+# Control flags for app-of-apps templates
+enableMonitoring: true
+groupSupportingApps: true
+
+# Tool namespaces configuration
+toolNamespaces:
+  externalDns: external-dns
+  portainer: portainer

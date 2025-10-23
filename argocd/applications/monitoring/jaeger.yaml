@@ -1,0 +1,63 @@
+# ArgoCD Application for Jaeger
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jaeger
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/part-of: wasaa-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: wasaa-observability
+  source:
+    repoURL: https://jaegertracing.github.io/helm-charts
+    chart: jaeger
+    targetRevision: 3.4.1
+    helm:
+      values: |
+        provisionDataStore:
+          cassandra: false
+        
+        storage:
+          type: memory
+        
+        agent:
+          enabled: true
+        
+        collector:
+          enabled: true
+          service:
+            type: ClusterIP
+        
+        query:
+          enabled: true
+          service:
+            type: ClusterIP
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            hosts:
+              - dev-jaeger.wasaachat.com
+            tls:
+              # TLS terminated at ALB using ACM wildcard certificate
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 3

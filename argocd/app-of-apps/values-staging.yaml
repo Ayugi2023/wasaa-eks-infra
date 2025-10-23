@@ -1,0 +1,77 @@
+# Staging environment configuration
+env: staging
+argocdProject: wasaa-applications
+argocdNamespace: argocd
+
+namespaces:
+  nginxIngress: ingress-nginx
+  wasaaAdminService: wasaa-admin-service-staging
+  wasaaAdsmanagerService: wasaa-adsmanager-service-staging
+  wasaaAffiliateService: wasaa-affiliate-service-staging
+  wasaaAppsService: wasaa-apps-service-staging
+  wasaaAuditService: wasaa-audit-service-staging
+  wasaaCallsService: wasaa-calls-service-staging
+  wasaaChamaService: wasaa-chama-service-staging
+  wasaaChatService: wasaa-chat-service-staging
+  wasaaContactService: wasaa-contact-service-staging
+  wasaaDeveloperService: wasaa-developer-service-staging
+  wasaaEscrowService: wasaa-escrow-service-staging
+  wasaaFundraiserService: wasaa-fundraiser-service-staging
+  wasaaGatewayService: wasaa-gateway-service-staging
+  wasaaGiftService: wasaa-gift-service-staging
+  wasaaGroupsService: wasaa-groups-service-staging
+  wasaaKafkaService: wasaa-kafka-service-staging
+  wasaaLivestreamService: wasaa-livestream-service-staging
+  wasaaMediaService: wasaa-media-service-staging
+  wasaaMessageService: wasaa-message-service-staging
+  wasaaModerationService: wasaa-moderation-service-staging
+  wasaaNotificationService: wasaa-notification-service-staging
+  wasaaShortsService: wasaa-shorts-service-staging
+  wasaaStatusService: wasaa-status-service-staging
+  wasaaStorefrontService: wasaa-storefront-service-staging
+  wasaaSupportService: wasaa-support-service-staging
+  wasaaUserService: wasaa-user-service-staging
+  wasaaWalletService: wasaa-wallet-service-staging
+  wasaaWebService: wasaa-web-service-staging
+
+# Database deployment controls for staging environment
+enableDatabases:
+  postgres: false  # Using AWS Aurora PostgreSQL
+  mongodb: false   # Using AWS DocumentDB
+  redis: false     # Renamed to microservicesRedis
+  microservicesRedis: true  # For microservices using ElastiCache
+
+# ArgoCD Redis deployment control
+enableArgocdRedis: true
+
+# Control whether this chart deploys ingress-nginx as an Application
+enableNginxIngress: false  # Disabled - managed separately in staging
+
+# New components configuration
+argocd:
+  ingress:
+    enabled: true
+    host: argocd.wasaa-staging.internal
+    # clusterIssuer removed: TLS handled by ALB+ACM
+  config:
+    url: https://argocd.wasaa-staging.internal
+  oidc:
+    enabled: false
+
+portainer:
+  persistence:
+    storageClass: ebs-ap-south-1a
+    size: 20Gi
+  service:
+    type: LoadBalancer
+  tls:
+    force: true
+  ingress:
+    enabled: true
+    host: portainer.wasaa-staging.internal
+    clusterIssuer: letsencrypt-production
+
+# Tool namespaces configuration
+toolNamespaces:
+  externalDns: external-dns
+  portainer: portainer

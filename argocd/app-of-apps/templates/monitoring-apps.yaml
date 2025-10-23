@@ -1,0 +1,41 @@
+{{- if .Values.enableMonitoring }}
+# App-of-Apps for Monitoring Components
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-monitoring-{{ .Values.env }}
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after core infrastructure
+spec:
+  project: wasaa-observability
+  source:
+    repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+    targetRevision: main
+    path: argocd/applications/monitoring
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.argocdNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 5
+  info:
+    - name: 'Description'
+      value: 'Monitoring stack: Prometheus, Grafana, Alertmanager, Loki, Jaeger, Pyroscope'
+    - name: 'Deploy Order'
+      value: '1. prometheus-operator, 2. prometheus, 3. grafana, 4. alertmanager, 5. loki, 6. jaeger, 7. pyroscope'
+{{- end }}

@@ -1,0 +1,9 @@
+# This keeps your NGINX Ingress Controller and microservices fully declarative and environment-aware. Update only app-of-apps/values.yaml to switch environments.
+
+
+apiVersion: v2
+name: app-of-apps
+description: App-of-Apps to bootstrap Argo CD Applications
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

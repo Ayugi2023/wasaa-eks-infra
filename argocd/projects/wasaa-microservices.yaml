@@ -1,0 +1,93 @@
+# ArgoCD Project for WASAA Microservices
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: wasaa-microservices
+  namespace: argocd
+  labels:
+    project-type: microservices
+spec:
+  description: "WASAA Platform Microservices (Chat, Admin, Audit, Contact, Gateway, Gift, Media, Notification, Status, Support, User, Wallet, Web)"
+  
+  sourceRepos:
+    - 'https://github.com/web-masters-ke/wasaa-infra.git'
+    - 'https://github.com/web-masters-ke/wasaa-chat-helm-charts'
+    - 'https://charts.bitnami.com/bitnami'
+  
+  destinations:
+    - namespace: 'wasaa-*'
+      server: https://kubernetes.default.svc
+    - namespace: 'argocd'
+      server: https://kubernetes.default.svc
+    - namespace: 'kafka'
+      server: https://kubernetes.default.svc
+    - namespace: 'redis'
+      server: https://kubernetes.default.svc
+  
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    # cert-manager Certificate kind removed; TLS is handled by ALB + ACM.
+  
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: ''
+      kind: Pod
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: cert-manager.io
+      kind: Certificate
+    - group: argoproj.io
+      kind: Application
+  
+  roles:
+    - name: microservices-admin
+      description: Full access to WASAA microservices
+      policies:
+        - p, proj:wasaa-microservices:microservices-admin, applications, *, wasaa-microservices/*, allow
+        - p, proj:wasaa-microservices:microservices-admin, repositories, *, *, allow
+      groups:
+        - wasaa:platform-team
+        - wasaa:tech-leads
+    
+    - name: microservices-developer
+      description: Developer access to microservices
+      policies:
+        - p, proj:wasaa-microservices:microservices-developer, applications, get, wasaa-microservices/*, allow
+        - p, proj:wasaa-microservices:microservices-developer, applications, sync, wasaa-microservices/*/developer/*, allow
+        - p, proj:wasaa-microservices:microservices-developer, applications, sync, wasaa-microservices/*/staging/*, allow
+      groups:
+        - wasaa:developers
+    
+    - name: microservices-readonly
+      description: Read-only access to microservices
+      policies:
+        - p, proj:wasaa-microservices:microservices-readonly, applications, get, wasaa-microservices/*, allow
+        - p, proj:wasaa-microservices:microservices-readonly, applications, sync, wasaa-microservices/*, deny
+      groups:
+        - wasaa:qa-team

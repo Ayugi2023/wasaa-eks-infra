@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: wasaa-common-applicationset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - namespace: wasaa-gateway-service
+          - namespace: wasaa-user-service
+          - namespace: wasaa-message-service
+          - namespace: wasaa-chat-service
+          - namespace: wasaa-admin-service
+          - namespace: wasaa-chama-service
+          - namespace: wasaa-livestream-service
+          - namespace: wasaa-escrow-service
+          - namespace: wasaa-gift-service
+          - namespace: wasaa-status-service
+          - namespace: wasaa-moderation-service
+          - namespace: wasaa-shorts-service
+          - namespace: wasaa-groups-service
+          - namespace: wasaa-calls-service
+          - namespace: wasaa-affiliate-service
+          - namespace: wasaa-apps-service
+          - namespace: wasaa-web-service
+          - namespace: wasaa-kafka-service
+          - namespace: wasaa-contact-service
+          - namespace: wasaa-storefront-service
+          - namespace: wasaa-wallet-service
+          - namespace: wasaa-fundraiser-service
+          - namespace: wasaa-notification-service
+          - namespace: wasaa-support-service
+          - namespace: wasaa-developer-service
+          - namespace: wasaa-media-service
+          - namespace: wasaa-audit-service
+          - namespace: wasaa-adsmanager
+  template:
+    metadata:
+      name: wasaa-common-{{namespace}}
+    spec:
+      project: wasaa-microservices
+      source:
+        repoURL: "https://github.com/web-masters-ke/wasaa-chat-helm-charts.git"
+        targetRevision: main
+        path: wasaa-common/charts
+        helm:
+          releaseName: wasaa-common
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

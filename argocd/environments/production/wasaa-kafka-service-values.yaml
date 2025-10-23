@@ -1,0 +1,62 @@
+# Environment-specific overrides for developer
+replicaCount: 2
+
+image:
+  tag: "3.6"
+
+service:
+  type: ClusterIP
+  port: 9092
+  
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: topology.kubernetes.io/zone
+              operator: In
+              values:
+                - ap-south-1a  # Ensure same AZ as storage
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+        - key: topology.kubernetes.io/zone
+          operator: In
+          values:
+          - ap-south-1a  # Prefer AZ where storage is provisioned
+  # Pod affinity to ensure pods are co-located with their PVCs
+  podAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: wasaa-kafka-service
+        topologyKey: kubernetes.io/hostname
+
+# Tolerations for spot instances in development
+tolerations:
+- key: "node-type"
+  operator: "Equal"
+  value: "spot"
+  effect: "NoSchedule"
+
+# If Kafka service uses persistence in developer environment
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: gp3
+  accessModes:
+    - ReadWriteOnce
+  annotations:
+    volume.kubernetes.io/storage-class: gp3
+    scheduler.alpha.kubernetes.io/preferred-zone: ap-south-1a

@@ -1,0 +1,5 @@
+# DISABLED: cert-manager Application disabled in repository
+# Reason: TLS termination moved to AWS ALB + ACM wildcard certificate. This Application
+# was preserved in git history if needed but disabled to avoid ArgoCD installing
+# cert-manager by default. To re-enable, restore the original Application manifest
+# or set the corresponding app-of-apps flag to true.

@@ -1,0 +1,25 @@
+# wasaa-chama-service-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-chama-service-developer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: wasaa-microservices
+  sources:
+    - repoURL: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
+      targetRevision: main
+      path: wasaa-chama-service
+      helm:
+        releaseName: wasaa-chama-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wasaa-chama-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
