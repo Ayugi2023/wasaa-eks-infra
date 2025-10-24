@@ -2,7 +2,7 @@
 # Global variables
 project_name: wasaa
 environment: prod
-aws_region: us-west-2
+aws_region: af-south-1
 cluster_name: wasaa-prod-eks
 
 # Kubernetes configuration
@@ -12,6 +12,7 @@ kubeconfig_path: ~/.kube/config
 app_namespace: default
 monitoring_namespace: monitoring
 argocd_namespace: argocd
+hubble_namespace: kube-system
 
 # Helm repositories
 helm_repos:
@@ -23,3 +24,5 @@ helm_repos:
     url: https://kubernetes.github.io/ingress-nginx
   - name: argo
     url: https://argoproj.github.io/argo-helm
+  - name: cilium
+    url: https://helm.cilium.io/

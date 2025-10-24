@@ -1,18 +1,28 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_eks_cluster" "cluster" {
+  name = var.cluster_name
+}
+
+locals {
+  oidc_provider = replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")
+}
+
 resource "aws_iam_role" "karpenter_controller" {
   name = "${var.cluster_name}-karpenter-controller"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
+        Effect = "Allow",
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(var.cluster_endpoint, "https://", "")}"
-        }
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.oidc_provider}"
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "${replace(var.cluster_endpoint, "https://", "")}:sub" = "system:serviceaccount:karpenter:karpenter"
+            "${local.oidc_provider}:sub" = "system:serviceaccount:kube-system:karpenter"
           }
         }
       }
@@ -20,16 +30,14 @@ resource "aws_iam_role" "karpenter_controller" {
   })
 }
 
-data "aws_caller_identity" "current" {}
-
 resource "aws_iam_policy" "karpenter_controller" {
   name = "${var.cluster_name}-karpenter-controller"
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow"
+        Effect = "Allow",
         Action = [
           "ec2:CreateLaunchTemplate",
           "ec2:CreateFleet",
@@ -43,8 +51,9 @@ resource "aws_iam_policy" "karpenter_controller" {
           "ec2:DescribeInstanceTypes",
           "ec2:DescribeInstanceTypeOfferings",
           "ec2:DescribeAvailabilityZones",
-          "ssm:GetParameter"
-        ]
+          "ssm:GetParameter",
+          "eks:DescribeCluster"
+        ],
         Resource = "*"
       }
     ]
@@ -58,7 +67,7 @@ resource "aws_iam_role_policy_attachment" "karpenter_controller" {
 
 resource "aws_sqs_queue" "karpenter" {
   name = "${var.cluster_name}-karpenter"
-  
+
   tags = {
     Name = "${var.cluster_name}-karpenter"
   }
@@ -66,9 +75,9 @@ resource "aws_sqs_queue" "karpenter" {
 
 resource "aws_cloudwatch_event_rule" "spot_interruption" {
   name = "${var.cluster_name}-spot-interruption"
-  
+
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source      = ["aws.ec2"],
     detail-type = ["EC2 Spot Instance Interruption Warning"]
   })
 }
@@ -81,9 +90,9 @@ resource "aws_cloudwatch_event_target" "spot_interruption" {
 
 resource "aws_cloudwatch_event_rule" "rebalance" {
   name = "${var.cluster_name}-rebalance"
-  
+
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source      = ["aws.ec2"],
     detail-type = ["EC2 Instance Rebalance Recommendation"]
   })
 }
@@ -96,9 +105,9 @@ resource "aws_cloudwatch_event_target" "rebalance" {
 
 resource "aws_cloudwatch_event_rule" "state_change" {
   name = "${var.cluster_name}-state-change"
-  
+
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source      = ["aws.ec2"],
     detail-type = ["EC2 Instance State-change Notification"]
   })
 }

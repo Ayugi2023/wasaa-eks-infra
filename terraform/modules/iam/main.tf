@@ -57,8 +57,14 @@ resource "aws_iam_instance_profile" "node_instance_profile" {
   role = aws_iam_role.node_role.name
 }
 
-data "aws_iam_openid_connect_provider" "eks" {
-  url = "https://oidc.eks.${data.aws_region.current.name}.amazonaws.com/id/${var.cluster_oidc_issuer_id}"
+resource "aws_iam_openid_connect_provider" "eks" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+  url             = "https://oidc.eks.${data.aws_region.current.name}.amazonaws.com/id/${var.cluster_oidc_issuer_id}"
+
+  tags = {
+    Name = "${var.cluster_name}-oidc-provider"
+  }
 }
 
 data "aws_region" "current" {}
@@ -73,11 +79,11 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
           }
         }
       }
@@ -259,11 +265,11 @@ resource "aws_iam_role" "ebs_csi_driver" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
           }
         }
       }
@@ -272,7 +278,7 @@ resource "aws_iam_role" "ebs_csi_driver" {
 }
 
 resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/Amazon_EBS_CSI_DriverPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
   role       = aws_iam_role.ebs_csi_driver.name
 }
 
@@ -286,11 +292,11 @@ resource "aws_iam_role" "efs_csi_driver" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:efs-csi-controller-sa"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:efs-csi-controller-sa"
           }
         }
       }
@@ -299,7 +305,7 @@ resource "aws_iam_role" "efs_csi_driver" {
 }
 
 resource "aws_iam_role_policy_attachment" "efs_csi_driver" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/Amazon_EFS_CSI_DriverPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
   role       = aws_iam_role.efs_csi_driver.name
 }
 
@@ -313,11 +319,11 @@ resource "aws_iam_role" "external_secrets" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:external-secrets:external-secrets"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:external-secrets:external-secrets"
           }
         }
       }
@@ -358,11 +364,11 @@ resource "aws_iam_role" "prometheus" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:monitoring:prometheus"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:monitoring:prometheus"
           }
         }
       }
@@ -406,11 +412,11 @@ resource "aws_iam_role" "container_insights" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:amazon-cloudwatch:cloudwatch-agent"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:amazon-cloudwatch:cloudwatch-agent"
           }
         }
       }
@@ -433,11 +439,11 @@ resource "aws_iam_role" "kubecost" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.eks.arn
+          Federated = aws_iam_openid_connect_provider.eks.arn
         }
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kubecost:kubecost-cost-analyzer"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kubecost:kubecost-cost-analyzer"
           }
         }
       }
@@ -474,4 +480,119 @@ resource "aws_iam_policy" "kubecost" {
 resource "aws_iam_role_policy_attachment" "kubecost" {
   policy_arn = aws_iam_policy.kubecost.arn
   role       = aws_iam_role.kubecost.name
+}
+
+resource "aws_iam_role" "cilium_operator" {
+  name = "${var.cluster_name}-cilium-operator"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:cilium-operator"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "cilium_operator" {
+  name = "${var.cluster_name}-cilium-operator"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeTags"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cilium_operator" {
+  policy_arn = aws_iam_policy.cilium_operator.arn
+  role       = aws_iam_role.cilium_operator.name
+}
+
+resource "aws_iam_role" "vpc_cni" {
+  name = "${var.cluster_name}-vpc-cni"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-node"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Karpenter Node Role (for EC2 instances provisioned by Karpenter)
+resource "aws_iam_role" "karpenter_node" {
+  name = "KarpenterNodeRole-${var.cluster_name}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_eks_worker" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_cni" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_registry" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ssm" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "vpc_cni" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.vpc_cni.name
 }

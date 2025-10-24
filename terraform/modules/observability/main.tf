@@ -6,41 +6,8 @@ resource "aws_prometheus_workspace" "main" {
   }
 }
 
-resource "aws_grafana_workspace" "main" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["AWS_SSO"]
-  permission_type          = "SERVICE_MANAGED"
-  role_arn                 = aws_iam_role.grafana.arn
-  name                     = "${var.cluster_name}-grafana"
-
-  data_sources = ["PROMETHEUS"]
-
-  tags = {
-    Name = "${var.cluster_name}-grafana"
-  }
-}
-
-resource "aws_iam_role" "grafana" {
-  name = "${var.cluster_name}-grafana-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "grafana.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "grafana" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonGrafanaServiceRole"
-  role       = aws_iam_role.grafana.name
-}
+# Grafana workspace not available in af-south-1 region
+# Will use self-hosted Grafana via Ansible
 
 resource "aws_dlm_lifecycle_policy" "ebs" {
   description        = "EBS snapshot lifecycle policy"

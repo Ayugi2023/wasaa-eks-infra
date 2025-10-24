@@ -67,6 +67,7 @@ module "eks_cluster" {
   environment               = var.environment
   ebs_csi_driver_role_arn   = module.iam.ebs_csi_driver_role_arn
   efs_csi_driver_role_arn   = module.iam.efs_csi_driver_role_arn
+  vpc_cni_role_arn          = module.iam.vpc_cni_role_arn
 }
 
 # Node Groups Module
@@ -82,13 +83,18 @@ module "nodegroups" {
 }
 
 # Karpenter Module
+
+# Add data source for AWS account ID
+data "aws_caller_identity" "current" {}
+
 module "karpenter" {
   source = "../../modules/karpenter"
   
-  cluster_name    = var.cluster_name
-  cluster_endpoint = module.eks_cluster.cluster_endpoint
-  node_role_arn   = module.iam.node_role_arn
-  environment     = var.environment
+  cluster_name      = var.cluster_name
+  cluster_endpoint  = module.eks_cluster.cluster_endpoint
+  node_role_arn     = module.iam.karpenter_node_role_arn
+  environment       = var.environment
+  aws_account_id    = data.aws_caller_identity.current.account_id
 }
 
 # Databases Module
@@ -99,7 +105,7 @@ module "databases" {
   private_subnet_ids = module.vpc.private_subnet_ids
   cluster_name       = var.cluster_name
   environment        = var.environment
-  kms_key_id         = module.kms.key_id
+  kms_key_id         = module.kms.key_arn
 }
 
 # Storage Module
@@ -108,7 +114,7 @@ module "storage" {
   
   cluster_name = var.cluster_name
   environment  = var.environment
-  kms_key_id   = module.kms.key_id
+  kms_key_id   = module.kms.key_arn
 }
 
 # CloudFront Module
@@ -138,7 +144,7 @@ module "efs" {
   vpc_id             = module.vpc.vpc_id
   vpc_cidr           = var.vpc_cidr
   private_subnet_ids = module.vpc.private_subnet_ids
-  kms_key_id         = module.kms.key_id
+  kms_key_id         = module.kms.key_arn
 }
 
 # ElastiCache Module

@@ -47,3 +47,18 @@ output "kubecost_role_arn" {
   description = "Kubecost role ARN"
   value       = aws_iam_role.kubecost.arn
 }
+
+output "cilium_operator_role_arn" {
+  description = "Cilium Operator role ARN"
+  value       = aws_iam_role.cilium_operator.arn
+}
+
+output "vpc_cni_role_arn" {
+  description = "VPC CNI role ARN"
+  value       = aws_iam_role.vpc_cni.arn
+}
+
+output "karpenter_node_role_arn" {
+  description = "Karpenter Node Role ARN for EC2 nodes provisioned by Karpenter"
+  value       = aws_iam_role.karpenter_node.arn
+}

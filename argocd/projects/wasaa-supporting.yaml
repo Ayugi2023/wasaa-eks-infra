@@ -11,6 +11,7 @@ spec:
   
   sourceRepos:
     - 'https://github.com/web-masters-ke/wasaa-infra.git'
+    - 'https://github.com/Ayugi2023/wasaa-eks-infra.git'
     - 'https://github.com/webmasters-Team/wasaa-infra.git'
     - 'https://kubernetes.github.io/ingress-nginx'
     - 'https://charts.jetstack.io'

@@ -1,80 +1,107 @@
 ---
 - name: Create monitoring namespace
-  kubernetes.core.k8s:
-    name: "{{ monitoring_namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
+  shell: kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 
-- name: Install Prometheus
-  kubernetes.core.helm:
-    name: prometheus
-    chart_ref: prometheus-community/kube-prometheus-stack
-    release_namespace: "{{ monitoring_namespace }}"
-    values:
-      grafana:
-        enabled: true
-        adminPassword: admin123
-        service:
-          type: ClusterIP
-        ingress:
-          enabled: true
-          ingressClassName: nginx
-          hosts:
-            - grafana.wasaachat.com
-          annotations:
-            nginx.ingress.kubernetes.io/rewrite-target: /
-      prometheus:
-        prometheusSpec:
-          retention: 30d
-          storageSpec:
-            volumeClaimTemplate:
-              spec:
-                storageClassName: gp3
-                accessModes: ["ReadWriteOnce"]
-                resources:
-                  requests:
-                    storage: 50Gi
-        service:
-          type: ClusterIP
-        ingress:
-          enabled: true
-          ingressClassName: nginx
-          hosts:
-            - prometheus.wasaachat.com
-          annotations:
-            nginx.ingress.kubernetes.io/rewrite-target: /
+- name: Check if Prometheus stack is installed
+  shell: helm list -n monitoring | grep prometheus
+  register: prometheus_installed
+  ignore_errors: yes
+  changed_when: false
 
-- name: Create monitoring ingress
-  kubernetes.core.k8s:
-    definition:
-      apiVersion: networking.k8s.io/v1
-      kind: Ingress
-      metadata:
-        name: monitoring-ingress
-        namespace: "{{ monitoring_namespace }}"
-        annotations:
-          kubernetes.io/ingress.class: nginx
-          nginx.ingress.kubernetes.io/rewrite-target: /
-      spec:
-        rules:
-        - host: grafana.wasaachat.com
-          http:
-            paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: prometheus-grafana
-                  port:
-                    number: 80
-        - host: prometheus.wasaachat.com
-          http:
-            paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: prometheus-kube-prometheus-prometheus
-                  port:
-                    number: 9090
+- name: Install Prometheus stack
+  shell: |
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      --namespace monitoring \
+      --set grafana.adminPassword=admin123 \
+      --set grafana.service.type=ClusterIP
+  when: prometheus_installed.rc != 0
+
+- name: Check if monitoring ingresses exist
+  shell: kubectl get ingress -n monitoring grafana-ingress
+  register: monitoring_ingresses_exist
+  ignore_errors: yes
+  changed_when: false
+
+- name: Create monitoring ingresses
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: grafana-ingress
+      namespace: monitoring
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      ingressClassName: nginx
+      rules:
+      - host: grafana.wasaachat.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-grafana
+                port:
+                  number: 80
+    ---
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: prometheus-ingress
+      namespace: monitoring
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      ingressClassName: nginx
+      rules:
+      - host: prometheus.wasaachat.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-kube-prometheus-prometheus
+                port:
+                  number: 9090
+    ---
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: alertmanager-ingress
+      namespace: monitoring
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      ingressClassName: nginx
+      rules:
+      - host: alertmanager.wasaachat.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-kube-prometheus-alertmanager
+                port:
+                  number: 9093
+    EOF
+  when: monitoring_ingresses_exist.rc != 0
+
+- name: Get LoadBalancer hostname
+  shell: kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+  register: lb_hostname
+  ignore_errors: yes
+  changed_when: false
+
+- name: Display monitoring access information
+  debug:
+    msg: |
+      Monitoring stack installed with ingresses!
+      Access via:
+      - Grafana: https://grafana.wasaachat.com (admin/admin123)
+      - Prometheus: https://prometheus.wasaachat.com
+      - AlertManager: https://alertmanager.wasaachat.com
+      LoadBalancer: {{ lb_hostname.stdout | default('Pending...') }}

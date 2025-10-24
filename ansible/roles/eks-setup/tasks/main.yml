@@ -1,42 +1,56 @@
 ---
+- name: Check existing Helm repositories
+  shell: helm repo list
+  register: existing_repos
+  ignore_errors: yes
+  changed_when: false
+
 - name: Add Helm repositories
-  kubernetes.core.helm_repository:
-    name: "{{ item.name }}"
-    repo_url: "{{ item.url }}"
+  shell: |
+    helm repo add {{ item.name }} {{ item.url }}
   loop: "{{ helm_repos }}"
+  when: existing_repos.stdout is not defined or item.name not in existing_repos.stdout
+  ignore_errors: yes
 
-- name: Install AWS Load Balancer Controller
-  kubernetes.core.helm:
-    name: aws-load-balancer-controller
-    chart_ref: eks/aws-load-balancer-controller
-    release_namespace: kube-system
-    create_namespace: true
-    values:
-      clusterName: "{{ cluster_name }}"
-      serviceAccount:
-        create: true
-        name: aws-load-balancer-controller
+- name: Update Helm repositories
+  shell: helm repo update
 
-- name: Install NGINX Ingress Controller
-  kubernetes.core.helm:
-    name: ingress-nginx
-    chart_ref: ingress-nginx/ingress-nginx
-    release_namespace: ingress-nginx
-    create_namespace: true
-    values:
-      controller:
-        service:
-          type: LoadBalancer
-          annotations:
-            service.beta.kubernetes.io/aws-load-balancer-type: nlb
-            service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-            service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-        ingressClassResource:
-          default: true
+- name: Create kube-system namespace
+  shell: kubectl create namespace kube-system --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Create ingress-nginx namespace
+  shell: kubectl create namespace ingress-nginx --dry-run=client -o yaml | kubectl apply -f -
 
 - name: Create application namespace
-  kubernetes.core.k8s:
-    name: "{{ app_namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
+  shell: kubectl create namespace {{ app_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Check if NGINX Ingress Controller is installed
+  shell: helm list -n ingress-nginx | grep ingress-nginx
+  register: nginx_installed
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install NGINX Ingress Controller
+  shell: |
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx \
+      --set controller.service.type=LoadBalancer \
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"=nlb \
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-cross-zone-load-balancing-enabled"=true \
+      --set controller.ingressClassResource.default=true
+  when: nginx_installed.rc != 0
+
+- name: Wait for NGINX Ingress Controller to be ready
+  shell: kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+
+- name: Get LoadBalancer URL
+  shell: kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+  register: lb_hostname
+  ignore_errors: yes
+
+- name: Display LoadBalancer information
+  debug:
+    msg: |
+      NGINX Ingress Controller installed successfully!
+      LoadBalancer URL: {{ lb_hostname.stdout | default('Pending...') }}
+      Note: AWS VPC CNI is handling load balancer provisioning (no separate cloud controller needed)

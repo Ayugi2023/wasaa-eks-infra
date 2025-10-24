@@ -5,6 +5,10 @@
   roles:
     - common
     - eks-setup
+    - cilium
     - argocd
     - monitoring
     - security
+  
+  post_tasks:
+    - include_tasks: roles/common/tasks/summary.yml

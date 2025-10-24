@@ -47,6 +47,7 @@ resource "aws_subnet" "private" {
     Name = "${var.cluster_name}-private-${count.index + 1}"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/internal-elb" = "1"
+    "karpenter.sh/discovery" = var.cluster_name
   }
 }
 
@@ -132,6 +133,7 @@ resource "aws_security_group" "cluster" {
 
   tags = {
     Name = "${var.cluster_name}-cluster-sg"
+    "karpenter.sh/discovery" = var.cluster_name
   }
 }
 
@@ -149,4 +151,48 @@ resource "aws_security_group" "vpc_endpoint" {
   tags = {
     Name = "${var.cluster_name}-vpc-endpoint-sg"
   }
+}
+
+# Cilium health checks
+resource "aws_security_group_rule" "cilium_health" {
+  type              = "ingress"
+  from_port         = 4240
+  to_port           = 4240
+  protocol          = "tcp"
+  self              = true
+  security_group_id = aws_security_group.cluster.id
+  description       = "Cilium health checks"
+}
+
+# Hubble server
+resource "aws_security_group_rule" "hubble_server" {
+  type              = "ingress"
+  from_port         = 4244
+  to_port           = 4244
+  protocol          = "tcp"
+  self              = true
+  security_group_id = aws_security_group.cluster.id
+  description       = "Hubble gRPC server"
+}
+
+# Hubble Relay
+resource "aws_security_group_rule" "hubble_relay" {
+  type              = "ingress"
+  from_port         = 4245
+  to_port           = 4245
+  protocol          = "tcp"
+  self              = true
+  security_group_id = aws_security_group.cluster.id
+  description       = "Hubble Relay"
+}
+
+# Cilium metrics
+resource "aws_security_group_rule" "cilium_metrics" {
+  type              = "ingress"
+  from_port         = 9962
+  to_port           = 9964
+  protocol          = "tcp"
+  self              = true
+  security_group_id = aws_security_group.cluster.id
+  description       = "Cilium Prometheus metrics"
 }

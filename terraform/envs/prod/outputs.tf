@@ -22,3 +22,13 @@ output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = module.cloudfront.distribution_id
 }
+
+output "vpc_cidr" {
+  description = "VPC CIDR block"
+  value       = var.vpc_cidr
+}
+
+output "cilium_operator_role_arn" {
+  description = "Cilium Operator role ARN"
+  value       = module.iam.cilium_operator_role_arn
+}

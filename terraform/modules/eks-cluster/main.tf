@@ -27,8 +27,20 @@ data "aws_eks_cluster_auth" "cluster" {
 }
 
 resource "aws_eks_addon" "vpc_cni" {
-  cluster_name = aws_eks_cluster.main.name
-  addon_name   = "vpc-cni"
+  cluster_name             = aws_eks_cluster.main.name
+  addon_name               = "vpc-cni"
+  service_account_role_arn = var.vpc_cni_role_arn
+  resolve_conflicts        = "OVERWRITE"
+
+  configuration_values = jsonencode({
+    env = {
+      AWS_VPC_K8S_CNI_EXTERNALSNAT = "false"
+      ENABLE_POD_ENI               = "true"
+      AWS_VPC_CNI_NODE_PORT_SUPPORT = "false"
+      ENABLE_PREFIX_DELEGATION      = "true"
+      WARM_PREFIX_TARGET            = "1"
+    }
+  })
 }
 
 resource "aws_eks_addon" "coredns" {
@@ -45,10 +57,14 @@ resource "aws_eks_addon" "ebs_csi" {
   cluster_name             = aws_eks_cluster.main.name
   addon_name               = "aws-ebs-csi-driver"
   service_account_role_arn = var.ebs_csi_driver_role_arn
+  resolve_conflicts        = "OVERWRITE"
+  
+  # configuration_values removed: serviceAccount annotations are not supported by EKS Addon API
 }
 
 resource "aws_eks_addon" "efs_csi" {
   cluster_name             = aws_eks_cluster.main.name
   addon_name               = "aws-efs-csi-driver"
   service_account_role_arn = var.efs_csi_driver_role_arn
+  resolve_conflicts        = "OVERWRITE"
 }
