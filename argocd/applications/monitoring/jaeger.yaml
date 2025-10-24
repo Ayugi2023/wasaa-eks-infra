@@ -19,22 +19,40 @@ spec:
       values: |
         provisionDataStore:
           cassandra: false
-        
+
         storage:
           type: memory
-        
+
         agent:
-          enabled: true
-        
+          enabled: false # deprecated, disable agent
+
         collector:
           enabled: true
           service:
             type: ClusterIP
-        
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/role
+                        operator: In
+                        values:
+                          - monitoring
+
         query:
           enabled: true
           service:
             type: ClusterIP
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/role
+                        operator: In
+                        values:
+                          - monitoring
           ingress:
             enabled: true
             ingressClassName: nginx
