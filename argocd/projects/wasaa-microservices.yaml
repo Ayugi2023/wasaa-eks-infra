@@ -11,6 +11,7 @@ spec:
   
   sourceRepos:
     - 'https://github.com/web-masters-ke/wasaa-infra.git'
+    - 'https://github.com/Ayugi2023/wasaa-eks-infra.git'
     - 'https://github.com/web-masters-ke/wasaa-chat-helm-charts'
     - 'https://charts.bitnami.com/bitnami'
   
@@ -64,6 +65,8 @@ spec:
       kind: Certificate
     - group: argoproj.io
       kind: Application
+    - group: argoproj.io
+      kind: ApplicationSet
   
   roles:
     - name: microservices-admin
