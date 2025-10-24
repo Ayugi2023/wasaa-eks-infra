@@ -1,0 +1,37 @@
+# Root ArgoCD Application for WASAA Monitoring Developer
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-monitoring-developer
+  namespace: argocd
+spec:
+  project: wasaa-monitoring-developer
+  source:
+    repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+    targetRevision: main
+    path: argocd/applications/monitoring
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 5
+  info:
+    - name: 'Description'
+      value: 'Consolidated monitoring stack: Jaeger, Loki, Pyroscope'
+    - name: 'Deploy Order'
+      value: '1. loki, 2. jaeger, 3. pyroscope'
