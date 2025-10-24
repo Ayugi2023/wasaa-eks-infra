@@ -1,0 +1,3 @@
+---
+# ArgoCD configuration
+argocd_namespace: argocd

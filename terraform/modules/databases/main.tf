@@ -26,7 +26,7 @@ resource "aws_security_group" "rds" {
 resource "aws_rds_cluster" "main" {
   cluster_identifier = "${var.cluster_name}-aurora"
   engine             = "aurora-postgresql"
-  engine_version     = "15.4"
+  engine_version     = "15.8"
   database_name      = "wasaadb"
   master_username    = "postgres"
   master_password    = "changeme123!"

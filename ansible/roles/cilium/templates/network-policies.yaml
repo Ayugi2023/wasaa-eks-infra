@@ -1,0 +1,50 @@
+---
+# Allow DNS queries
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: default
+spec:
+  endpointSelector: {}
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      rules:
+        dns:
+        - matchPattern: "*"
+
+---
+# Allow access to AWS metadata service
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-aws-metadata
+  namespace: default
+spec:
+  endpointSelector: {}
+  egress:
+  - toCIDR:
+    - 169.254.169.254/32
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+
+---
+# Default deny all template
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: default
+spec:
+  endpointSelector: {}
+  ingress: []
+  egress: []

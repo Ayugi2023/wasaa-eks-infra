@@ -1,0 +1,40 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: general
+spec:
+  disruption:
+    consolidateAfter: 1m
+    consolidationPolicy: WhenEmptyOrUnderutilized
+  limits:
+    cpu: 1000
+  template:
+    metadata:
+      labels:
+        nodegroup-type: general
+    spec:
+      expireAfter: 720h
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values:
+            - amd64
+        - key: kubernetes.io/os
+          operator: In
+          values:
+            - linux
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+            - on-demand
+        - key: nodegroup-type
+          operator: In
+          values:
+            - general
+        # Removed karpenter.k8s.aws/* requirement keys to avoid creating
+        # NodeClaims with restricted karpenter.k8s.aws label domain.
+        # Rely on generic requirements instead.

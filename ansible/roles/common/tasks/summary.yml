@@ -1,0 +1,32 @@
+---
+- name: Get LoadBalancer hostname
+  shell: kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+  register: lb_hostname
+  ignore_errors: yes
+  changed_when: false
+
+- name: Display complete infrastructure summary
+  debug:
+    msg: |
+      🎉 WASAA EKS Infrastructure Deployment Complete! 🎉
+      
+      📊 Monitoring Stack:
+      - Grafana: https://grafana.wasaachat.com (admin/admin123)
+      - Prometheus: https://prometheus.wasaachat.com
+      - AlertManager: https://alertmanager.wasaachat.com
+      
+      🚀 GitOps & CI/CD:
+      - ArgoCD: https://argocd.wasaachat.com (admin/y9ZpX6KyjzcUSkk1)
+      
+      🔍 Network Observability:
+      - Hubble UI: https://hubble.wasaachat.com
+      
+      🌐 LoadBalancer:
+      - URL: {{ lb_hostname.stdout | default('Pending...') }}
+      - Type: AWS Network Load Balancer (NLB)
+      
+      📝 Notes:
+      - All services accessible via ingress
+      - Cilium running in hybrid mode with AWS VPC CNI
+      - ArgoCD monitoring both helm charts and infrastructure repos
+      - NGINX Ingress Controller handling traffic routing

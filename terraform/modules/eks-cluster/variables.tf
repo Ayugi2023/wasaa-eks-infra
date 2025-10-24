@@ -42,3 +42,8 @@ variable "efs_csi_driver_role_arn" {
   description = "EFS CSI driver role ARN"
   type        = string
 }
+
+variable "vpc_cni_role_arn" {
+  description = "VPC CNI role ARN"
+  type        = string
+}

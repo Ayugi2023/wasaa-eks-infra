@@ -1,0 +1,96 @@
+# Karpenter NodePool and EC2NodeClass manifest template
+# Save as karpenter-nodepool-ec2nodeclass.yaml and apply with envsubst | kubectl apply -f -
+
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand"]
+        # (no nodegroup-type requirement on default)
+        # Removed karpenter.k8s.aws/* requirement keys because they produce
+        # restricted label domains when Karpenter synthesizes NodeClaims.
+        # Keep the scheduling requirements generic so Karpenter can choose instance types.
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+      expireAfter: 720h
+  limits:
+    cpu: 1000
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  # Use the pre-created instance profile so Karpenter does not need IAM create rights
+  instanceProfile: "wasaa-prod-eks-karpenter-node"
+  # Use explicit AMI id resolved from SSM to ensure the CRD accepts the selector
+  # Prefer the EKS-optimized Amazon Linux 2 family so the instance userdata
+  # (Karpenter multipart MIME with application/node.eks.aws parts) is handled
+  # correctly by cloud-init and the EKS bootstrap on the AMI.
+  amiFamily: AL2
+  # Remove the explicit AMI id so Karpenter will resolve a compatible EKS AMI for
+  # the region/cluster. Provide amiSelectorTerms to satisfy the CRD validation
+  # and pick the latest EKS-optimized Amazon Linux 2 AMI provided by Amazon.
+  amiSelectorTerms:
+    - id: "ami-0a229bc604bb2ab4c"
+    - id: "ami-0f63d10190f79f3cd"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "wasaa-prod-eks"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "wasaa-prod-eks"
+
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: memory
+spec:
+  template:
+    metadata:
+      labels:
+        nodegroup-type: memory
+    spec:
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand"]
+          # Removed karpenter.k8s.aws/instance-category and karpenter.k8s.aws/instance-generation
+          # because those labels are in the restricted karpenter.k8s.aws domain and
+          # Karpenter synthesizes them into NodeClaim requirements which the API webhook
+          # rejects. Keep requirements generic and rely on instanceClass/EC2NodeClass
+          # to constrain instance selection.
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+      expireAfter: 720h
+  limits:
+    cpu: 500
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m

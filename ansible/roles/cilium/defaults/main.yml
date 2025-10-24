@@ -1,0 +1,44 @@
+---
+cilium_version: "1.14.5"
+cilium_namespace: "kube-system"
+
+# Chaining mode configuration
+cilium_cni_chaining_mode: "aws-cni"
+cilium_cni_exclusive: false
+
+# ENI mode (AWS-specific)
+cilium_eni_enabled: true
+cilium_ipam_mode: "eni"
+
+# Routing
+cilium_routing_mode: "native"
+cilium_tunnel_mode: "disabled"
+cilium_endpoint_routes_enabled: true
+
+# Masquerading
+cilium_enable_ipv4_masquerade: false
+cilium_egress_masquerade_interfaces: "eth0"
+cilium_bpf_masquerade: true
+
+# Hubble (Observability)
+cilium_hubble_enabled: true
+cilium_hubble_relay_enabled: true
+cilium_hubble_ui_enabled: true
+cilium_hubble_metrics:
+  - dns
+  - drop
+  - tcp
+  - flow
+  - icmp
+  - http
+
+# Prometheus
+cilium_prometheus_enabled: true
+cilium_operator_prometheus_enabled: true
+cilium_hubble_metrics_service_monitor_enabled: true
+
+# Operator
+cilium_operator_replicas: 2
+
+# Terraform directory
+terraform_dir: "../../terraform/envs/prod"

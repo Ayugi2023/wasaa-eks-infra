@@ -12,7 +12,7 @@ resource "helm_release" "karpenter" {
     yamlencode({
       settings = {
         clusterName       = var.cluster_name
-        interruptionQueue = "${var.cluster_name}"
+        interruptionQueue = "${var.cluster_name}-karpenter"
       }
       serviceAccount = {
         annotations = {

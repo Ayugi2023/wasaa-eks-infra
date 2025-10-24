@@ -40,21 +40,56 @@ resource "aws_iam_policy" "karpenter_controller" {
         Effect = "Allow",
         Action = [
           "ec2:CreateLaunchTemplate",
+          "ec2:CreateLaunchTemplateVersion",
+          "ec2:DeleteLaunchTemplate",
+          "ec2:DescribeLaunchTemplates",
+          "ec2:DescribeLaunchTemplateVersions",
           "ec2:CreateFleet",
           "ec2:RunInstances",
           "ec2:CreateTags",
           "ec2:TerminateInstances",
-          "ec2:DescribeLaunchTemplates",
           "ec2:DescribeInstances",
           "ec2:DescribeSecurityGroups",
           "ec2:DescribeSubnets",
           "ec2:DescribeInstanceTypes",
           "ec2:DescribeInstanceTypeOfferings",
           "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeSpotPriceHistory",
+          "ec2:DescribeImages",
           "ssm:GetParameter",
-          "eks:DescribeCluster"
+          "pricing:GetProducts",
+            "iam:ListInstanceProfiles",
+            "iam:GetInstanceProfile",
+            "iam:CreateInstanceProfile",
+            "iam:DeleteInstanceProfile",
+            "iam:AddRoleToInstanceProfile",
+            "iam:RemoveRoleFromInstanceProfile",
+            "iam:TagInstanceProfile",
+            "iam:CreateRole",
+            "iam:DeleteRole",
+            "iam:AttachRolePolicy",
+            "iam:DetachRolePolicy",
+            "iam:PutRolePolicy",
+            "iam:PassRole"
         ],
         Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "eks:DescribeCluster"
+        ],
+        Resource = data.aws_eks_cluster.cluster.arn
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:GetQueueUrl",
+          "sqs:ReceiveMessage",
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes"
+        ],
+        Resource = aws_sqs_queue.karpenter.arn
       }
     ]
   })
@@ -116,4 +151,43 @@ resource "aws_cloudwatch_event_target" "state_change" {
   rule      = aws_cloudwatch_event_rule.state_change.name
   target_id = "KarpenterStateChange"
   arn       = aws_sqs_queue.karpenter.arn
+}
+
+# Pre-created instance role & profile for nodes launched by Karpenter to avoid
+# giving the controller permission to create instance profiles.
+resource "aws_iam_role" "karpenter_node" {
+  name = "${var.cluster_name}-karpenter-node"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "karpenter_node" {
+  name = "${var.cluster_name}-karpenter-node"
+  role = aws_iam_role.karpenter_node.name
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ec2_policy" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_cni_policy" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_registry_policy" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }

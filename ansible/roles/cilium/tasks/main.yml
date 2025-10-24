@@ -1,0 +1,67 @@
+---
+- name: Check if Cilium is installed
+  shell: helm list -n kube-system | grep cilium
+  register: cilium_installed
+  ignore_errors: yes
+  changed_when: false
+
+- name: Check if Cilium has Hubble enabled
+  shell: kubectl get pods -n kube-system | grep hubble-ui
+  register: hubble_enabled
+  ignore_errors: yes
+  changed_when: false
+  when: cilium_installed.rc == 0
+
+- name: Install/Upgrade Cilium with Hubble in hybrid mode
+  shell: |
+    helm upgrade --install cilium cilium/cilium \
+      --namespace kube-system \
+      --set hubble.enabled=true \
+      --set hubble.relay.enabled=true \
+      --set hubble.ui.enabled=true \
+      --set cni.chainingMode=aws-cni \
+      --set cni.exclusive=false \
+      --set enableIPv4Masquerade=false \
+      --set routingMode=native \
+      --set eni.enabled=true \
+      --set ipam.mode=eni
+  when: cilium_installed.rc != 0 or (cilium_installed.rc == 0 and hubble_enabled.rc != 0)
+
+- name: Check if Hubble UI Ingress exists
+  shell: kubectl get ingress -n kube-system hubble-ui-ingress
+  register: hubble_ingress_exists
+  ignore_errors: yes
+  changed_when: false
+
+- name: Create Hubble UI Ingress
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: hubble-ui-ingress
+      namespace: kube-system
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      ingressClassName: nginx
+      rules:
+      - host: hubble.wasaachat.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hubble-ui
+                port:
+                  number: 80
+    EOF
+  when: hubble_ingress_exists.rc != 0
+
+- name: Display Cilium and Hubble status
+  debug:
+    msg: |
+      Cilium installed in hybrid mode with AWS VPC CNI!
+      Hubble UI available at: hubble.wasaachat.com (via ingress)
+      Or port-forward: kubectl port-forward -n kube-system svc/hubble-ui 8080:80
