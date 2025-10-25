@@ -17,6 +17,9 @@ spec:
         values: |-
           replicaCount: 3
           replicas: 3
+          kafka:
+            nodeIdFromPodName: true
+            controllerQuorumVoters: "0@wasaa-kafka-service-0.wasaa-kafka-service-headless:9093,1@wasaa-kafka-service-1.wasaa-kafka-service-headless:9093,2@wasaa-kafka-service-2.wasaa-kafka-service-headless:9093"
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-kafka-service
