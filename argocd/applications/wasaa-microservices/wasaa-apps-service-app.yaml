@@ -14,6 +14,14 @@ spec:
       path: wasaa-apps-service
       helm:
         releaseName: wasaa-apps-service
+        values: |-
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-apps-service
