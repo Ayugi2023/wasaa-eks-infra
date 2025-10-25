@@ -28,3 +28,7 @@ serviceAccount:
 # Disable ingress - managed by Helm chart
 ingress:
   enabled: false
+
+# Temporarily disable init containers for troubleshooting
+initContainers:
+  enabled: false
