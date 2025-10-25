@@ -15,8 +15,8 @@ spec:
       helm:
         releaseName: wasaa-kafka-service
         values: |-
-          replicaCount: 1
-          replicas: 1
+          replicaCount: 3
+          replicas: 3
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-kafka-service
