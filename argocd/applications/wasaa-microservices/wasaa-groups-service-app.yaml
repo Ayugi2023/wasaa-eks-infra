@@ -14,6 +14,9 @@ spec:
       path: wasaa-groups-service
       helm:
         releaseName: wasaa-groups-service
+        values: |-
+          replicaCount: 0
+          replicas: 0
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-groups-service

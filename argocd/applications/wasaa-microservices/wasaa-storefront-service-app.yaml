@@ -15,8 +15,8 @@ spec:
       helm:
         releaseName: wasaa-storefront-service
         values: |-
-          replicaCount: 1
-          replicas: 1
+          replicaCount: 0
+          replicas: 0
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-storefront-service
