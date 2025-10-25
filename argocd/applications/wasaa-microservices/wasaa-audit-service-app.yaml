@@ -17,6 +17,8 @@ spec:
         values: |-
           replicaCount: 1
           replicas: 1
+          env:
+            KAFKAJS_NO_PARTITIONER_WARNING: "1"
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-audit-service
