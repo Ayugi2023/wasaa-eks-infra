@@ -3,6 +3,10 @@
 
 # Jaeger All-in-One configuration for development
 jaeger:
+  # Node selector for general nodepool
+  nodeSelector:
+    nodegroup-type: general
+
   # Storage configuration
   persistence:
     enabled: true
@@ -27,7 +31,7 @@ jaeger:
       annotations:
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
         nginx.ingress.kubernetes.io/rewrite-target: /
-        alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:561810056018:certificate/79970870-42b8-4600-8ea3-e85a0f0bcab5"
+        alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:af-south-1:561810056018:certificate/e1cf741f-2a7d-496e-9bfb-cbc4a494d0fb"
         alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-2016-08"
         alb.ingress.kubernetes.io/scheme: internet-facing
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'

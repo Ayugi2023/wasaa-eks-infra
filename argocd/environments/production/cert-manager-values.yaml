@@ -3,6 +3,9 @@ installCRDs: true
 
 replicaCount: 1
 
+nodeSelector:
+  nodegroup-type: general
+
 resources:
   requests:
     cpu: 100m

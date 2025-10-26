@@ -30,29 +30,15 @@ spec:
           enabled: true
           service:
             type: ClusterIP
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/role
-                        operator: In
-                        values:
-                          - monitoring
+          nodeSelector:
+            nodegroup-type: general
 
         query:
           enabled: true
           service:
             type: ClusterIP
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/role
-                        operator: In
-                        values:
-                          - monitoring
+          nodeSelector:
+            nodegroup-type: general
           ingress:
             enabled: true
             ingressClassName: nginx
