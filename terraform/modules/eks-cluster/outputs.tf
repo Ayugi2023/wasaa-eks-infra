@@ -24,4 +24,11 @@ output "cluster_oidc_issuer_id" {
   value       = replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://oidc.eks.${data.aws_region.current.name}.amazonaws.com/id/", "")
 }
 
+data "aws_caller_identity" "current" {}
+
+output "cluster_oidc_provider_arn" {
+  description = "EKS cluster OIDC provider ARN"
+  value       = "arn:aws:iam:${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.${data.aws_region.current.name}.amazonaws.com/id/${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://oidc.eks.${data.aws_region.current.name}.amazonaws.com/id/", "")}" 
+}
+
 data "aws_region" "current" {}

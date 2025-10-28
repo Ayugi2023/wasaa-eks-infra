@@ -13,6 +13,13 @@ resource "aws_security_group" "elasticache" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    description = "Allow EKS nodes"
+    cidr_blocks = var.private_subnet_cidrs
+  }
 
   tags = {
     Name = "${var.cluster_name}-cache-sg"

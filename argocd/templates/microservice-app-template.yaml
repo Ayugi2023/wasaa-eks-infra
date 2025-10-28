@@ -1,0 +1,61 @@
+# Template for WASAA Microservice ArgoCD Application
+# Replace {{SERVICE_NAME}} with actual service name
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{SERVICE_NAME}}-developer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: wasaa-microservices
+  sources:
+    - repoURL: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
+      targetRevision: main
+      path: {{SERVICE_NAME}}
+      helm:
+        releaseName: {{SERVICE_NAME}}
+        valueFiles:
+          - $values/argocd/environments/production/{{SERVICE_NAME}}-values.yaml
+    - repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{SERVICE_NAME}}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+        - /spec/template/spec/containers/0/image
+        - /spec/template/metadata/annotations
+    - group: ""
+      kind: ConfigMap
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+      jsonPointers:
+        - /spec/minReplicas
+        - /spec/maxReplicas
+        - /status
+  revisionHistoryLimit: 5

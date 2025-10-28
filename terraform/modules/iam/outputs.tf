@@ -23,11 +23,6 @@ output "ebs_csi_driver_role_arn" {
   value       = aws_iam_role.ebs_csi_driver.arn
 }
 
-output "efs_csi_driver_role_arn" {
-  description = "EFS CSI driver role ARN"
-  value       = aws_iam_role.efs_csi_driver.arn
-}
-
 output "external_secrets_role_arn" {
   description = "External Secrets role ARN"
   value       = aws_iam_role.external_secrets.arn

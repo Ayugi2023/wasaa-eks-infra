@@ -1,11 +1,21 @@
+output "private_subnet_cidrs" {
+  description = "CIDR blocks of EKS private subnets"
+  value       = aws_subnet.private_eks[*].cidr_block
+}
+
 output "vpc_id" {
   description = "VPC ID"
   value       = aws_vpc.main.id
 }
 
 output "private_subnet_ids" {
-  description = "Private subnet IDs"
+  description = "Private subnet IDs for RDS"
   value       = aws_subnet.private[*].id
+}
+
+output "private_eks_subnet_ids" {
+  description = "Private EKS subnet IDs"
+  value       = aws_subnet.private_eks[*].id
 }
 
 output "public_subnet_ids" {

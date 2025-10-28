@@ -62,9 +62,3 @@ resource "aws_eks_addon" "ebs_csi" {
   # configuration_values removed: serviceAccount annotations are not supported by EKS Addon API
 }
 
-resource "aws_eks_addon" "efs_csi" {
-  cluster_name             = aws_eks_cluster.main.name
-  addon_name               = "aws-efs-csi-driver"
-  service_account_role_arn = var.efs_csi_driver_role_arn
-  resolve_conflicts        = "OVERWRITE"
-}

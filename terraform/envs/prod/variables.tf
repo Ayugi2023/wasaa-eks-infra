@@ -1,3 +1,8 @@
+variable "db_username" {
+  description = "Database admin username for Aurora PostgreSQL and DocumentDB"
+  type        = string
+  default     = "wasaa_admin"
+}
 variable "aws_region" {
   description = "AWS region"
   type        = string

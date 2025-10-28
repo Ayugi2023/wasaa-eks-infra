@@ -94,7 +94,7 @@ gateway:
       nginx.ingress.kubernetes.io/auth-type: basic
       nginx.ingress.kubernetes.io/auth-secret: loki-basic-auth
       nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Loki'
-      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:561810056018:certificate/79970870-42b8-4600-8ea3-e85a0f0bcab5"
+  alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:af-south-1:561810056018:certificate/e1cf741f-2a7d-496e-9bfb-cbc4a494d0fb"
       alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-2016-08"
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'

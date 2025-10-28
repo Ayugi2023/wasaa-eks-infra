@@ -1,0 +1,24 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: microservices
+spec:
+  amiFamily: AL2
+  amiSelectorTerms:
+    - id: ami-0a229bc604bb2ab4c  # amd64
+    - id: ami-0f63d10190f79f3cd  # arm64
+  instanceProfile: wasaa-prod-eks-karpenter-node
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 1
+    httpTokens: required
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: wasaa-prod-eks
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: wasaa-prod-eks
+  userData: |
+    #!/bin/bash
+    /etc/eks/bootstrap.sh wasaa-prod-eks --container-runtime containerd --kubelet-extra-args "--node-labels=nodegroup-type=microservices,workload=microservices"

@@ -61,12 +61,11 @@ module "eks_cluster" {
   cluster_name              = var.cluster_name
   cluster_version           = var.cluster_version
   vpc_id                    = module.vpc.vpc_id
-  private_subnet_ids        = module.vpc.private_subnet_ids
+  private_subnet_ids        = module.vpc.private_eks_subnet_ids
   cluster_service_role_arn  = module.iam.cluster_service_role_arn
   cluster_security_group_id = module.vpc.cluster_security_group_id
   environment               = var.environment
   ebs_csi_driver_role_arn   = module.iam.ebs_csi_driver_role_arn
-  efs_csi_driver_role_arn   = module.iam.efs_csi_driver_role_arn
   vpc_cni_role_arn          = module.iam.vpc_cni_role_arn
 }
 
@@ -77,7 +76,7 @@ module "nodegroups" {
   cluster_name           = var.cluster_name
   cluster_endpoint       = module.eks_cluster.cluster_endpoint
   cluster_ca_certificate = module.eks_cluster.cluster_ca_certificate
-  private_subnet_ids     = module.vpc.private_subnet_ids
+  private_subnet_ids     = module.vpc.private_eks_subnet_ids
   node_role_arn          = module.iam.node_role_arn
   environment            = var.environment
 }
@@ -99,13 +98,16 @@ module "karpenter" {
 
 # Databases Module
 module "databases" {
+  vpc_cidr          = var.vpc_cidr
   source = "../../modules/databases"
 
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
+  private_subnet_cidrs = module.vpc.private_subnet_cidrs
   cluster_name       = var.cluster_name
   environment        = var.environment
   kms_key_id         = module.kms.key_arn
+  db_username        = var.db_username
 }
 
 # Storage Module
@@ -136,17 +138,6 @@ module "vpc_endpoints" {
   security_group_id  = module.vpc.vpc_endpoint_security_group_id
 }
 
-# EFS Module
-module "efs" {
-  source = "../../modules/efs"
-
-  cluster_name       = var.cluster_name
-  vpc_id             = module.vpc.vpc_id
-  vpc_cidr           = var.vpc_cidr
-  private_subnet_ids = module.vpc.private_subnet_ids
-  kms_key_id         = module.kms.key_arn
-}
-
 # ElastiCache Module
 module "elasticache" {
   source = "../../modules/elasticache"
@@ -155,6 +146,7 @@ module "elasticache" {
   vpc_id             = module.vpc.vpc_id
   vpc_cidr           = var.vpc_cidr
   private_subnet_ids = module.vpc.private_subnet_ids
+  private_subnet_cidrs = module.vpc.private_subnet_cidrs
 }
 
 # Observability Module
@@ -166,7 +158,7 @@ module "observability" {
 
 # Alerts Module - creates SNS topics, Lambdas, EventBridge rules and alarms
 module "alerts" {
-  source = "../../../modules/alerts"
+  source = "../../modules/alerts"
 
   cluster_name = var.cluster_name
   kms_key_id   = module.kms.key_arn
@@ -189,4 +181,20 @@ module "alerts" {
   request_count_threshold       = 20000
   autoscaler_instance_threshold = 3
   autoscaler_window_minutes     = 5
+}
+ 
+# SSM Bastion Module
+module "ssm_bastion" {
+  source              = "../../modules/ssm-bastion"
+  cluster_name        = var.cluster_name
+  oidc_provider_arn   = module.eks_cluster.cluster_oidc_provider_arn
+  oidc_provider       = "oidc.eks.${var.aws_region}.amazonaws.com/id/${module.eks_cluster.cluster_oidc_issuer_id}"
+  aws_region          = var.aws_region
+  tags                = { Environment = var.environment, Project = var.project_name, ManagedBy = "terraform" }
+  kms_key_id          = module.kms.key_arn
+
+  vpc_id              = module.vpc.vpc_id
+  bastion_subnet_id   = module.vpc.private_subnet_ids[0]
+  bastion_key_name    = "wasaa-eks-ssm-debug"
+  bastion_ami_id      = "ami-0504602f6baa54f7c" # Amazon Linux 2 for af-south-1 (2025-10-08)
 }

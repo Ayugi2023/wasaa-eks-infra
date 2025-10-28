@@ -8,7 +8,7 @@ resource "aws_eks_node_group" "general" {
   instance_types = ["m6i.large"]
 
   scaling_config {
-    desired_size = 1
+  desired_size = 2
     max_size     = 20
     min_size     = 1
   }
@@ -43,8 +43,8 @@ resource "aws_eks_node_group" "memory" {
   instance_types = ["r6i.large"]
 
   scaling_config {
-    desired_size = 1
-    max_size     = 20
+    desired_size = 2
+    max_size     = 10
     min_size     = 1
   }
 
@@ -68,17 +68,53 @@ resource "aws_eks_node_group" "memory" {
   }
 }
 
-resource "aws_eks_node_group" "graviton" {
+# Graviton node group disabled due to architecture mismatch issues
+# resource "aws_eks_node_group" "graviton" {
+#   cluster_name    = var.cluster_name
+#   node_group_name = "ng-graviton"
+#   node_role_arn   = var.node_role_arn
+#   subnet_ids      = var.private_subnet_ids
+#
+#   capacity_type  = "ON_DEMAND"
+#   instance_types = ["m6g.large"]
+#
+#   scaling_config {
+#     desired_size = 0
+#     max_size     = 10
+#     min_size     = 0
+#   }
+#
+#   update_config {
+#     max_unavailable = 1
+#   }
+#
+#   ami_type   = "AL2_ARM_64"
+#   disk_size  = 50
+#   
+#   labels = {
+#     "nodegroup-type" = "graviton"
+#     "workload"       = "cost-sensitive"
+#     "arch"           = "arm64"
+#   }
+#   
+#   tags = {
+#     Environment = var.environment
+#     NodeGroup   = "graviton"
+#     Name        = "eks-ng-graviton"
+#   }
+# }
+
+resource "aws_eks_node_group" "microservices" {
   cluster_name    = var.cluster_name
-  node_group_name = "ng-graviton"
+  node_group_name = "ng-microservices"
   node_role_arn   = var.node_role_arn
   subnet_ids      = var.private_subnet_ids
 
-  capacity_type  = "ON_DEMAND"
-  instance_types = ["m6g.large"]
+  capacity_type  = "SPOT"
+  instance_types = ["m5.large", "m5.xlarge", "m5a.large", "m5a.xlarge"]
 
   scaling_config {
-    desired_size = 1
+    desired_size = 2
     max_size     = 20
     min_size     = 1
   }
@@ -87,18 +123,18 @@ resource "aws_eks_node_group" "graviton" {
     max_unavailable = 1
   }
 
-  ami_type   = "AL2_ARM_64"
+  ami_type   = "AL2_x86_64"
   disk_size  = 50
   
   labels = {
-    "nodegroup-type" = "graviton"
-    "workload"       = "cost-sensitive"
-    "arch"           = "arm64"
+    "nodegroup-type" = "microservices"
+    "workload"       = "microservices"
+    "arch"           = "amd64"
   }
   
   tags = {
     Environment = var.environment
-    NodeGroup   = "graviton"
-    Name        = "eks-ng-graviton"
+    NodeGroup   = "microservices"
+    Name        = "eks-ng-microservices"
   }
 }

@@ -15,8 +15,25 @@ spec:
       helm:
         releaseName: wasaa-message-service
         values: |-
-          replicaCount: 1
-          replicas: 1
+          replicaCount: 2
+          
+          hpa:
+            enabled: true
+            minReplicas: 1
+            maxReplicas: 10
+            targetCPUUtilizationPercentage: 70
+          
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          
+          serviceAccount:
+            create: false
+            name: default
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-message-service
@@ -25,4 +42,23 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+        - /spec/template/spec/containers/0/image
+    - group: ""
+      kind: ConfigMap
+      jsonPointers:
+        - /data
+      - RespectIgnoreDifferences=false
+      - ApplyOutOfSyncOnly=false
