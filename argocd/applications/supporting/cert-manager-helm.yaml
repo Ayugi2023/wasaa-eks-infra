@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-helm
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
+    targetRevision: main
+    path: cert-manager
+    helm:
+      releaseName: cert-manager-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
