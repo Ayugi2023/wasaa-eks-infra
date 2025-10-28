@@ -37,6 +37,18 @@ spec:
           
           env:
             PORT: "3005"
+            MONGODB_SSL_CA_FILE: "/etc/ssl/certs/mongodb/global-bundle.pem"
+            MONGODB_TLS: "true"
+          
+          volumes:
+            - name: docdb-ssl-cert
+              configMap:
+                name: docdb-ssl-cert
+          
+          volumeMounts:
+            - name: docdb-ssl-cert
+              mountPath: /etc/ssl/certs/mongodb
+              readOnly: true
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-message-service
