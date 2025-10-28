@@ -34,6 +34,9 @@ spec:
           serviceAccount:
             create: false
             name: default
+          
+          env:
+            PORT: "3005"
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-message-service
