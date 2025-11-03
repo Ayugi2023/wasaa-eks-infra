@@ -11,7 +11,7 @@ spec:
   sources:
     - repoURL: https://github.com/web-masters-ke/wasaa-chat-helm-charts.git
       targetRevision: main
-      path: wasaa-adsmanager
+      path: wasaa-adsmanager-service
       helm:
         releaseName: wasaa-adsmanager
         values: |
