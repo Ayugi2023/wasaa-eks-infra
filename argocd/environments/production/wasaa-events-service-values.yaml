@@ -1,0 +1,34 @@
+replicaCount: 2
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+serviceAccount:
+  create: false
+  name: default
+
+env:
+  PORT: "3000"
+  MONGODB_SSL_CA_FILE: "/etc/ssl/certs/mongodb/global-bundle.pem"
+  MONGODB_TLS: "true"
+
+volumes:
+  - name: docdb-ssl-cert
+    configMap:
+      name: docdb-ssl-cert
+
+volumeMounts:
+  - name: docdb-ssl-cert
+    mountPath: /etc/ssl/certs/mongodb
+    readOnly: true

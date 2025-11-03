@@ -1,0 +1,67 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: unified
+spec:
+  disruption:
+    consolidateAfter: 30s
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    expireAfter: 24h
+  limits:
+    cpu: 1000
+    memory: 1000Gi
+  template:
+    metadata:
+      labels:
+        nodegroup-type: unified
+        workload: general
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: unified
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values: ["t3.medium", "t3.large", "t3.xlarge", "m5.large", "m5.xlarge", "m6i.large", "m6i.xlarge"]
+      startupTaints:
+        - key: "karpenter.sh/unschedulable"
+          value: "true"
+          effect: NoSchedule
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: unified
+spec:
+  instanceStorePolicy: RAID0
+  userData: |
+    #!/bin/bash
+    /etc/eks/bootstrap.sh wasaa-prod-eks
+    echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+    sysctl -p
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "wasaa-prod-eks"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "wasaa-prod-eks"
+  instanceProfile: "wasaa-prod-eks-karpenter-node"
+  amiSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "wasaa-prod-eks"
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 50Gi
+        volumeType: gp3
+        deleteOnTermination: true

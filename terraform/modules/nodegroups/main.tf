@@ -8,8 +8,8 @@ resource "aws_eks_node_group" "general" {
   instance_types = ["m6i.large"]
 
   scaling_config {
-  desired_size = 2
-    max_size     = 20
+    desired_size = 1
+    max_size     = 3
     min_size     = 1
   }
 
@@ -43,9 +43,9 @@ resource "aws_eks_node_group" "memory" {
   instance_types = ["r6i.large"]
 
   scaling_config {
-    desired_size = 2
-    max_size     = 10
-    min_size     = 1
+    desired_size = 0
+    max_size     = 2
+    min_size     = 0
   }
 
   update_config {
@@ -114,9 +114,9 @@ resource "aws_eks_node_group" "microservices" {
   instance_types = ["m5.large", "m5.xlarge", "m5a.large", "m5a.xlarge"]
 
   scaling_config {
-    desired_size = 2
-    max_size     = 20
-    min_size     = 1
+    desired_size = 0
+    max_size     = 2
+    min_size     = 0
   }
 
   update_config {

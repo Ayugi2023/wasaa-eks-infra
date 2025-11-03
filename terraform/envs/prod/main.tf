@@ -198,3 +198,12 @@ module "ssm_bastion" {
   bastion_key_name    = "wasaa-eks-ssm-debug"
   bastion_ami_id      = "ami-0504602f6baa54f7c" # Amazon Linux 2 for af-south-1 (2025-10-08)
 }
+
+# ECR OIDC Module
+module "ecr_oidc" {
+  source            = "../../modules/ecr-oidc"
+  cluster_name      = var.cluster_name
+  oidc_provider_arn = module.eks_cluster.cluster_oidc_provider_arn
+  oidc_provider     = "oidc.eks.${var.aws_region}.amazonaws.com/id/${module.eks_cluster.cluster_oidc_issuer_id}"
+  tags              = { Environment = var.environment, Project = var.project_name, ManagedBy = "terraform" }
+}

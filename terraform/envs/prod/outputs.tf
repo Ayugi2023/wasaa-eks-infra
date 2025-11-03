@@ -65,3 +65,14 @@ output "redis_endpoint" {
 output "documentdb_endpoint" {
   value = module.databases.documentdb_endpoint
 }
+
+# ECR OIDC outputs
+output "ecr_role_arn" {
+  description = "ARN of the ECR OIDC IAM role"
+  value       = module.ecr_oidc.ecr_role_arn
+}
+
+output "ecr_service_account_name" {
+  description = "Name of the ECR service account"
+  value       = module.ecr_oidc.service_account_name
+}
