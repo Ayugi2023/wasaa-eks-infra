@@ -14,16 +14,12 @@ spec:
       path: wasaa-apps-service
       helm:
         releaseName: wasaa-apps-service
-        values: |-
-          resources:
-            limits:
-              cpu: 500m
-              memory: 1Gi
-              ephemeral-storage: 1Gi
-            requests:
-              cpu: 200m
-              memory: 512Mi
-              ephemeral-storage: 500Mi
+    - repoURL: https://github.com/Ayugi2023/wasaa-eks-infra.git
+      targetRevision: main
+      path: argocd/environments/production
+      helm:
+        valueFiles:
+          - wasaa-apps-service-values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-apps-service
@@ -32,7 +28,8 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
       - ApplyOutOfSyncOnly=true
     retry:
       limit: 5
