@@ -1,0 +1,25 @@
+# wasaa-developer-portal-service-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaa-developer-portal-service-developer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: wasaa-microservices
+  source:
+    repoURL: https://github.com/webmasters-Team/wasaa-chat-helm-charts.git
+    targetRevision: HEAD
+    path: wasaa-developer-portal-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wasaa-developer-portal-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true

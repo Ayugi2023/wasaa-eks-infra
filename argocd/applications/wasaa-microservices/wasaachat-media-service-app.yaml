@@ -1,0 +1,25 @@
+# wasaachat-media-service-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wasaachat-media-service-developer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: wasaa-microservices
+  source:
+    repoURL: https://github.com/webmasters-Team/wasaa-chat-helm-charts.git
+    targetRevision: HEAD
+    path: wasaachat-media-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wasaachat-media-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true

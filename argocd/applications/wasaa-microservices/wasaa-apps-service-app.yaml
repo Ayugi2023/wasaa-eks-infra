@@ -17,11 +17,13 @@ spec:
         values: |-
           resources:
             limits:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 500m
+              memory: 1Gi
+              ephemeral-storage: 1Gi
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 200m
+              memory: 512Mi
+              ephemeral-storage: 500Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: wasaa-apps-service
