@@ -1,6 +1,8 @@
-output "s3_bucket_endpoint" {
-  value = module.storage.s3_bucket_endpoint
-}
+# COMMENTED OUT - EXPENSIVE MODULES REMOVED
+# output "s3_bucket_endpoint" {
+#   value = module.storage.s3_bucket_endpoint
+# }
+
 output "cluster_endpoint" {
   description = "EKS cluster endpoint"
   value       = module.eks_cluster.cluster_endpoint
@@ -21,10 +23,11 @@ output "private_subnet_ids" {
   value       = module.vpc.private_subnet_ids
 }
 
-output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID"
-  value       = module.cloudfront.distribution_id
-}
+# COMMENTED OUT - EXPENSIVE MODULES REMOVED
+# output "cloudfront_distribution_id" {
+#   description = "CloudFront distribution ID"
+#   value       = module.cloudfront.distribution_id
+# }
 
 output "vpc_cidr" {
   description = "VPC CIDR block"
@@ -36,17 +39,18 @@ output "cilium_operator_role_arn" {
   value       = module.iam.cilium_operator_role_arn
 }
 
-output "aurora_postgres_endpoint" {
-  value = module.databases.aurora_postgres_endpoint
-}
+# COMMENTED OUT - EXPENSIVE MODULES REMOVED
+# output "aurora_postgres_endpoint" {
+#   value = module.databases.aurora_postgres_endpoint
+# }
 
-output "aurora_postgres_reader_endpoint" {
-  value = module.databases.aurora_postgres_reader_endpoint
-}
+# output "aurora_postgres_reader_endpoint" {
+#   value = module.databases.aurora_postgres_reader_endpoint
+# }
 
-output "s3_bucket_name" {
-  value = module.storage.s3_bucket_name
-}
+# output "s3_bucket_name" {
+#   value = module.storage.s3_bucket_name
+# }
 
 output "node_role_arn" {
   description = "EKS node role ARN (can be used to verify SSM policy)"
@@ -58,13 +62,14 @@ output "node_instance_profile_name" {
   value       = module.iam.node_instance_profile_name
 }
 
-output "redis_endpoint" {
-  value = module.elasticache.redis_endpoint
-}
+# COMMENTED OUT - EXPENSIVE MODULES REMOVED
+# output "redis_endpoint" {
+#   value = module.elasticache.redis_endpoint
+# }
 
-output "documentdb_endpoint" {
-  value = module.databases.documentdb_endpoint
-}
+# output "documentdb_endpoint" {
+#   value = module.databases.documentdb_endpoint
+# }
 
 # ECR OIDC outputs
 output "ecr_role_arn" {
@@ -75,4 +80,25 @@ output "ecr_role_arn" {
 output "ecr_service_account_name" {
   description = "Name of the ECR service account"
   value       = module.ecr_oidc.service_account_name
+}
+
+# COST-OPTIMIZED DATABASE OUTPUTS
+output "postgres_endpoint_dev" {
+  description = "PostgreSQL database endpoint"
+  value       = aws_db_instance.postgres_dev.endpoint
+}
+
+output "postgres_port_dev" {
+  description = "PostgreSQL database port"
+  value       = aws_db_instance.postgres_dev.port
+}
+
+output "redis_endpoint_dev" {
+  description = "Redis cache endpoint"
+  value       = aws_elasticache_replication_group.dev.primary_endpoint_address
+}
+
+output "mongodb_endpoint_dev" {
+  description = "MongoDB service endpoint (internal)"
+  value       = "mongodb.mongodb.svc.cluster.local"
 }

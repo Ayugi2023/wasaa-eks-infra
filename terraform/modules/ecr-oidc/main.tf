@@ -25,6 +25,10 @@ resource "aws_iam_role" "ecr_oidc_role" {
     ]
   })
 
+  lifecycle {
+    ignore_changes = all
+  }
+
   tags = var.tags
 }
 
